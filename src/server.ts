@@ -1,17 +1,13 @@
-import dotenv from "dotenv";
-dotenv.config(); // MUST BE FIRST
-
-import app from "./app";
-import connectDB from "./config/db";
+import app from './app';
 
 const PORT = process.env.PORT || 5000;
 
-// Connect DB FIRST
-connectDB();
-
 app.listen(PORT, () => {
-  console.log("╔════════════════════════════════════╗");
-  console.log("║      StudyFlow AI Backend 🚀       ║");
-  console.log("╚════════════════════════════════════╝");
-  console.log(`Server running on port ${PORT}`);
+  console.log(`
+╔══════════════════════════════════════════╗
+║      Zentrix — Backend v2.0              ║
+║   Server running on port ${PORT}             ║
+║   http://localhost:${PORT}                   ║
+╚══════════════════════════════════════════╝
+  `);
 });
