@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { generateAccessToken, generateRefreshToken } from '../utils/generateToken';
 import { sendSuccess, sendCreated, sendError } from '../utils/ApiResponse';
@@ -53,6 +54,36 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }, 'Login successful');
   } catch (error) {
     console.error('❌ Login error:', error);
+    sendError(res, 'Server error', 500, error);
+  }
+};
+
+export const refreshAccessToken = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      res.status(400).json({ success: false, message: 'Refresh token is required' });
+      return;
+    }
+
+    let decoded: { id: string };
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET as string) as { id: string };
+    } catch {
+      res.status(401).json({ success: false, message: 'Refresh token invalid or expired' });
+      return;
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    const newAccessToken = generateAccessToken(user.id, user.email, user.role);
+    sendSuccess(res, { accessToken: newAccessToken }, 'Access token refreshed');
+  } catch (error) {
+    console.error('❌ Refresh token error:', error);
     sendError(res, 'Server error', 500, error);
   }
 };
@@ -127,5 +158,4 @@ export const uploadAvatar = async (req: AuthRequest, res: Response): Promise<voi
     console.error('❌ Avatar upload error:', error);
     sendError(res, 'Upload failed', 500, error);
   }
-
 };
